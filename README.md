@@ -1,4 +1,3 @@
-/*************************************************************
 ** bn0055_accel_gyro_fusion_pub.cpp
 ** ROS publisher node for bn0055 absolute orientation sensor
 **
@@ -26,4 +25,3 @@
 ** github.com/lbrombach
 ** Date 12/8/2019
 **
-*************************************************************/
