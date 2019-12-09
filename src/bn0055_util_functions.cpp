@@ -23,6 +23,7 @@
 **
 ** Author: Lloyd Brombach
 ** lbrombach2@gmail.com
+** github.com/lbrombach
 ** Date 12/8/2019
 **
 *************************************************************/
@@ -329,7 +330,7 @@ bool save_config(int pi, int serHandle)
 
     //get all 22 sensor offsets and radii values starting at reg 0x55
     int numBytes = 22;
-    char outBuf[4]={START, READ, ACC_OFFSET_X_LSB, numBytes};
+    char outBuf[4]={START, READ, ACC_OFFSET_X_LSB, (char)numBytes};
     char inBuf[numBytes+2] = {0};
     serial_write(pi, serHandle, outBuf, 4);
     time_sleep(.5);
@@ -403,6 +404,7 @@ bool save_config(int pi, int serHandle)
     if(outFile.is_open() )
     {
         outFile<<"bn0055 absolute orientation imu sensor calibration offset file"<<endl
+                <<"Author: Lloyd Brombach 12/6/2019   github.com/lbrombach"<<endl
                 <<"#####"<<endl
                 <<IMU_MODE<<" "<<MY_UNITS<<" "<<CALIB_REQUIRED_FOR_IMU_MODE<<" ";
                 for(int i=0; i<numBytes; i++)
