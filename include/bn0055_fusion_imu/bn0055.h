@@ -58,6 +58,18 @@ const int MY_UNITS = 134; // 10000110 - defines unit preferences. read/write at 
 const int CALIB_REQUIRED_FOR_IMU_MODE = 60; //60 = 00111100
 const int SUCCESS_CODE = 0xBB; // 187 signals successful write, 0xEE (238) is a fail code
 
+const int AXIS_MAP_SIGN = 0X42;
+const int AXIS_MAP_CONFIG = 0X41;
+const int AXIS_REMAP_CONFIG_VAL_DEFAULT = 0X24;
+const int AXIS_REMAP_CONFIG_VAL_90_CW = 0X21;
+const int AXIS_REMAP_CONFIG_VAL_180 = 0X24;
+const int AXIS_REMAP_CONFIG_VAL_270_CW = 0X21;
+const int AXIS_REMAP_SIGN_VAL_DEFAULT = 0X00;
+const int AXIS_REMAP_SIGN_VAL_90_CW = 0X02;
+const int AXIS_REMAP_SIGN_VAL_180 = 0X06;
+const int AXIS_REMAP_SIGN_VAL_270_CW = 0X04;
+
+
 
 //addresses of calibration offset and radius data registers
 const int MAG_RADIUS_MSB    = 0x6a;
@@ -177,6 +189,10 @@ double get_heading(int pi, int serHandle);
 //prints raw accel data to screen.
 void get_accel(int pi, int serHandle);
 
+//allows user to compensate for sensor mounted in orientaion other than default
+//90 degree incrememts about the z axis only)
+bool rotate_axis_map(int pi, int serHandle);
+
 
 
 
@@ -212,6 +228,18 @@ bool set_byte(int pi, int serHandle, int regLSB, int val);
 //checks the response code (and displays result) after a read/write command sent
 bool write_success(int response);
 
+//reads axis map config byte and axis map sign byte.
+//returns 0-3 code (or 1111 for failed read)
+// 0 = set for sensor mounted 270 degrees CW from default
+// 1 = set for default mounting
+// 2 = set for sensor mounted 180 degrees from default
+// 3 = set for sensor mounted 90 degrees CW from default
+int get_axis_map(int pi, int serHandle);
+
+//sets axis map config data
+bool set_axis_remap(int pi, int serHandle, int axisMapConfig);
+
+
 //reads system status
 int get_system_status(int pi, int serHandle);
 
@@ -239,7 +267,6 @@ bool set_opr_mode_8(int pi, int serHandle);
 //writes unit preferences to unts register. Currently hard-coded for
 //m/s^2, rads/sec, and radians per standard ROS units.
 bool set_my_units(int pi, int serHandle);
-
 
 
 

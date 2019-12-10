@@ -41,7 +41,7 @@ using namespace std;
 int get_menu_choice()
 {
     int choice = -1;
-    while(choice < 0 || choice > 8)
+    while(choice < 0 || choice > 9)
     {
         if(cin.fail())
         {
@@ -57,7 +57,8 @@ int get_menu_choice()
         <<"5. Run calibration routine"<<endl
         <<"6. Print raw accel data"<<endl
         <<"7. Print fused euler heading"<<endl
-        <<"8. Clear Buffer (try this if unit acting wonky. must be not be in config mode)"<<endl
+        <<"8. Remap axis orientation"<<endl
+        <<"9. Clear Buffer (try this if unit acting wonky. must be not be in config mode)"<<endl
         <<"0. Exit"<<endl;
 
         cin>>choice;
@@ -170,6 +171,10 @@ int main(int argc, char **argv)
                 break;
 
             case 8:
+                 cout<<rotate_axis_map(pi, serHandle);
+                 break;
+
+            case 9:
                  clear_buffer(pi, serHandle);
                  break;
 

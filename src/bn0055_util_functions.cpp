@@ -110,6 +110,44 @@ void get_accel(int pi, int serHandle)
     cout<<endl<< "Accel x, y, z = "<<(double)data[0] /100<<" "<<(double)data[1]/100<<" "<<(double)data[2]/100<<" m/s^2 = "<<endl;
 }
 
+bool rotate_axis_map(int pi, int serHandle)
+{
+    set_config_mode(pi, serHandle);
+    int choice = -1;
+    while(choice < 0 || choice > 3)
+    {
+        if(cin.fail())
+        {
+            cin.clear();
+            cin.ignore(200, '\n');
+        }
+
+        cout<<endl<<"Choose sensor orientation:"<<endl
+        <<"0. Sensor mounted 270 degrees CW from default"<<endl
+        <<"1. Default mounting"<<endl
+        <<"2. Sensor mounted 180 degrees from default"<<endl
+        <<"3. Sensor mounted 90 degrees CW from default"<<endl;
+        cin>>choice;
+    }
+
+    if (!set_axis_remap(pi, serHandle, choice) && get_axis_map(pi, serHandle != choice))
+    {
+        time_sleep(.25);
+        if(!set_axis_remap(pi, serHandle, choice))
+        {
+            cout<<"***WARNING: UNABLE TO SET OR VERIFY AXIS MAP CONFIG!***"<<endl;
+            return false;
+        }
+    }
+
+    cout<<"Axis successfully remapped"<<endl;
+    time_sleep(.25);
+    set_opr_mode_8(pi, serHandle);
+    return true;
+}
+
+
+
 bool verify_accel_gyro_fusion_config(int pi, int serHandle)
 {
     int pwr = get_pwr_mode(pi, serHandle);
@@ -156,6 +194,31 @@ void show_current_config(int pi, int serHandle)
     get_calibration_status(pi, serHandle);
     cout<<endl;
     get_pwr_mode(pi, serHandle);
+    cout<<endl;
+
+    switch (get_axis_map(pi, serHandle))
+    {
+        case 0:
+        cout<<endl<<"Axis orientation map is 270 CW from default"<<endl;
+        break;
+
+        case 1:
+        cout<<endl<<"Axis orientation map is default"<<endl;
+        break;
+
+        case 2:
+        cout<<endl<<"Axis orientation map is 180 degrees from default"<<endl;
+        break;
+
+        case 3:
+        cout<<endl<<"Axis orientation map is 90 degrees CW from default"<<endl;
+        break;
+
+        default:
+        cout<<endl<<"****UNABLE TO DETERMINE AXIS MAP CONFIGURATION****"<<endl;
+    }
+
+
     cout<<"#########################################################"<<endl<<endl;
 }
 
@@ -240,9 +303,8 @@ bool initialize_bn0055(int pi, int serHandle)
 
     ifstream inFile;
     inFile.open(path.c_str());
-    int opr, units, calStat;
-  //  int temp[22]={0};
-    char calData[26]={0};
+    int opr, units, calStat, axisMapConfig;
+    char calData[27]={0};
 
     if(inFile.is_open() )
     {
@@ -254,8 +316,8 @@ bool initialize_bn0055(int pi, int serHandle)
         inFile.ignore(50, '\n');
 
         //read current opr mode, units, and calibration status at time of last save
-        inFile>>opr>>units>>calStat;
-        cout<<endl<<"opr mode = "<<opr<<"  units = "<<units<< "  calStat = "<<calStat<<endl;
+        inFile>>opr>>units>>calStat>>axisMapConfig;
+        cout<<endl<<"opr mode = "<<opr<<"  units = "<<units<< "  calStat = "<<calStat<<"  axis map config = "<<axisMapConfig<<endl;
 
         //read calibration offsets and radii into buf to write, leaving room for header bytes
         for(int i=0; i<22; i++)
@@ -275,6 +337,15 @@ bool initialize_bn0055(int pi, int serHandle)
     cout<<endl<<"File read complete, trying to write data"<<endl;
     set_config_mode(pi, serHandle);
 
+
+    if (!set_axis_remap(pi, serHandle, axisMapConfig) && get_axis_map(pi, serHandle != axisMapConfig))
+    {
+        time_sleep(.25);
+        if(!set_axis_remap(pi, serHandle, axisMapConfig))
+        {
+            cout<<"***WARNING: UNABLE TO SET OR VERIFY AXIS MAP CONFIG!***"<<endl;
+        }
+    }
 
     //set write header bytes
     calData[0]=0xAA;
@@ -382,6 +453,21 @@ bool save_config(int pi, int serHandle)
             confirm();
     }
 
+    int axisMapConfig = get_axis_map(pi, serHandle);
+    if(axisMapConfig < 0 || axisMapConfig > 3)
+    {
+        time_sleep(.2);
+        axisMapConfig = get_axis_map(pi, serHandle);
+
+        if(axisMapConfig < 0 || axisMapConfig > 3)
+        {
+            cout<<"************************************************************"<<endl;
+            cout<<"*     Unable to retrieve axis map config.  Aborting.       *"<<endl;
+            cout<<"************************************************************"<<endl;
+            return -1;
+        }
+    }
+
     string path = DEFAULT_FILE_PATH;
 
     cout<<endl<<"Current path and file to save to: "<<path
@@ -406,7 +492,7 @@ bool save_config(int pi, int serHandle)
         outFile<<"bn0055 absolute orientation imu sensor calibration offset file"<<endl
                 <<"Author: Lloyd Brombach 12/6/2019   github.com/lbrombach"<<endl
                 <<"#####"<<endl
-                <<IMU_MODE<<" "<<MY_UNITS<<" "<<CALIB_REQUIRED_FOR_IMU_MODE<<" ";
+                <<IMU_MODE<<" "<<MY_UNITS<<" "<<CALIB_REQUIRED_FOR_IMU_MODE<<" "<<axisMapConfig<<" ";
                 for(int i=0; i<numBytes; i++)
                 {
                     outFile<<(int)inBuf[i]<<" ";

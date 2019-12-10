@@ -58,6 +58,8 @@ void clear_buffer(int pi, int serHandle)
 //but does not process to signed int or units
 int get_byte(int pi, int serHandle, int regLSB)
 {
+    //slow down 2nd requests
+    time_sleep(.05);
     char outBuf[4]={START, READ, (char)regLSB, 1};
     char inBuf[4] = {0};
 
@@ -65,6 +67,7 @@ int get_byte(int pi, int serHandle, int regLSB)
     time_sleep(.05);
     serial_read(pi, serHandle, inBuf, 4);
     time_sleep(.05);
+
     //successful response should be [responseByte] [msgLength] [data]
     //read success response byte = 0xBB (187)
     //error response will be [0xEE] [error code] (0xEE = 238)
@@ -82,7 +85,6 @@ int get_byte(int pi, int serHandle, int regLSB)
         write_success(inBuf[1]);
         return 1111;
     }
-    time_sleep(.02);
 }
 
 //retrieves AND combines two bytes to single SIGNED int values
@@ -212,6 +214,7 @@ bool set_config_mode(int pi, int serHandle)
     return true;
 }
 
+
 bool set_opr_mode_8(int pi, int serHandle)
 {
     if(!set_byte(pi, serHandle, OPR_MODE, IMU_MODE) )
@@ -220,6 +223,7 @@ bool set_opr_mode_8(int pi, int serHandle)
     }
     return true;
 }
+
 
 bool set_my_units(int pi, int serHandle)
 {
@@ -240,6 +244,80 @@ int get_pwr_mode(int pi, int serHandle)
     if (mode == 2)   {cout<<"Power Mode = Supend"<<endl;}
     if (mode < 0 || mode >2)  {cout<<"UNKNOWN MODE"<<endl;}
     return mode;
+}
+
+int get_axis_map(int pi, int serHandle)
+{
+    int mapConfig = get_byte(pi, serHandle, AXIS_MAP_CONFIG);
+    if (mapConfig == 1111){mapConfig = get_byte(pi, serHandle, AXIS_MAP_CONFIG);}
+    int mapSign = get_byte(pi, serHandle, AXIS_MAP_SIGN);
+    if (mapSign == 1111){mapSign = get_byte(pi, serHandle, AXIS_MAP_SIGN);}
+
+
+    if (mapConfig == AXIS_REMAP_CONFIG_VAL_270_CW && mapSign == AXIS_REMAP_SIGN_VAL_270_CW)
+    { return 0; }
+
+    if (mapConfig == AXIS_REMAP_CONFIG_VAL_DEFAULT && mapSign == AXIS_REMAP_SIGN_VAL_DEFAULT)
+    { return 1; }
+
+    if (mapConfig == AXIS_REMAP_CONFIG_VAL_180 && mapSign == AXIS_REMAP_SIGN_VAL_180)
+    { return 2; }
+
+    if (mapConfig == AXIS_REMAP_CONFIG_VAL_90_CW && mapSign == AXIS_REMAP_SIGN_VAL_90_CW)
+    { return 3; }
+
+    cout<<endl<<"**** Unable to read axis orientation map ****"<<endl;
+    cout<<"raw bytes out = "<<(int)mapConfig <<" .. "<< (int)mapSign<<endl;
+    return 1111;
+}
+
+bool set_axis_remap(int pi, int serHandle, int axisMapConfig)
+{
+    int mapConfig, mapSign;
+    switch(axisMapConfig)
+    {
+        case 0:
+        mapConfig = AXIS_REMAP_CONFIG_VAL_270_CW;
+        mapSign = AXIS_REMAP_SIGN_VAL_270_CW;
+        break;
+
+        case 1:
+        mapConfig = AXIS_REMAP_CONFIG_VAL_DEFAULT;
+        mapSign = AXIS_REMAP_SIGN_VAL_DEFAULT;
+        break;
+
+        case 2:
+        mapConfig = AXIS_REMAP_CONFIG_VAL_180;
+        mapSign = AXIS_REMAP_SIGN_VAL_180;
+        break;
+
+        case 3:
+        mapConfig = AXIS_REMAP_CONFIG_VAL_90_CW;
+        mapSign = AXIS_REMAP_SIGN_VAL_90_CW;
+        break;
+
+        default:
+        cout<<"**INVALID AXIS MAP CONFIG. VERIFY OK AXIS MAP BEFORE USING IMU**"<<endl;
+        return false;
+    }
+
+    if(!set_byte(pi, serHandle, AXIS_MAP_CONFIG, mapConfig) )
+    {
+        if(!set_byte(pi, serHandle, AXIS_MAP_CONFIG, mapConfig))
+        {
+            return false;
+        }
+    }
+
+    if(!set_byte(pi, serHandle, AXIS_MAP_SIGN, mapSign) )
+    {
+        if(!set_byte(pi, serHandle, AXIS_MAP_SIGN, mapSign) )
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 int get_opr_mode(int pi, int serHandle)
