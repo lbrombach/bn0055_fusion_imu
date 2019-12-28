@@ -86,13 +86,16 @@ int main(int argc, char **argv)
 
     //set our range message fixed data
     imu.header.frame_id = "imu";
-    //set absolute orientaion and angular velocity to unknown
-    imu.orientation_covariance[0] = -1;
-    imu.angular_velocity_covariance[0] = -1;
+
+    //set absolute orientaion and angular velocity to "do not use"
+    //imu.angular_velocity_covariance[0] = -1;
+
     //set accel covariance to unknown
     for(int i = 0; i<9; i++)
     {
         imu.linear_acceleration_covariance[i]=0;
+        imu.orientation_covariance[i] = 0;
+        imu.angular_velocity_covariance[i] = 0;
     }
 
     int consecutive_errors = 0;
