@@ -74,8 +74,9 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    if(!verify_accel_gyro_fusion_config(pi, serHandle))
+    if(!verify_accel_gyro_fusion_config(pi, serHandle) && !auto_initialize_bn0055(pi, serHandle))
     {
+
         cout<<"************************************************************"<<endl;
         cout<<"* Unable to verify or set BN0055 IMU config. ABORTING NODE *"<<endl;
         cout<<"************************************************************"<<endl;
@@ -93,9 +94,18 @@ int main(int argc, char **argv)
     //set accel covariance to unknown
     for(int i = 0; i<9; i++)
     {
-        imu.linear_acceleration_covariance[i]=0;
-        imu.orientation_covariance[i] = 0;
-        imu.angular_velocity_covariance[i] = 0;
+        if(i==0 || i==4 || i==8)
+        {
+            imu.linear_acceleration_covariance[i]=.0001;
+            imu.orientation_covariance[i] = .000001;
+            imu.angular_velocity_covariance[i] = .0001;
+        }
+        else
+        {
+            imu.linear_acceleration_covariance[i]=0;
+            imu.orientation_covariance[i] = 0;
+            imu.angular_velocity_covariance[i] = 0;
+        }
     }
 
     int consecutive_errors = 0;

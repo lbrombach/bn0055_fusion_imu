@@ -167,6 +167,10 @@ bool save_config(int pi, int serhandle);
 //after reset or power on, run this to set mode, unit preferences, and calibration data from file
 bool initialize_bn0055(int pi, int serHandle);
 
+//same as initialze_bn0055 except does not ask use for path confirmation - just uses default path
+bool auto_initialize_bn0055(int pi, int serHandle);
+
+
 //More of a visual tool... once the unit is in IMU mode, it is always trying to calibrate if it
 //is out of calibration. This keeps checking calibration status and lets you know when its good
 bool calibrate_bn0055(int pi, int serHandle);
