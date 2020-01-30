@@ -493,7 +493,7 @@ bool get_st_result(int pi, int serHandle)
 }
 
 
-int get_calibration_status(int pi, int serHandle)
+int get_calibration_status(int pi, int serHandle, bool autoMode)
 {
 /*
 4 statuses: 0-3 where 0 not calibrated and 3 fully calibrated
@@ -506,20 +506,28 @@ and indicates that gyro and accel are fully calibrated
 */
     int status = get_byte(pi, serHandle, CALIB_STAT);
     if(status == 1111){status = get_byte(pi, serHandle, CALIB_STAT);}
-
-    cout<<"calibration bits 0-3 values : sys sys gyr gyr acc acc mag mag"<<endl
-        <<((status & 128) == 128)<<((status & 64) == 64)<<((status & 32) == 32)<<((status & 16) == 16)
-        <<((status & 0x08) == 8)<<((status & 0x04) == 4)<<((status & 0x02) == 2)<<((status & 0x01) == 1)<<endl;
-
-    if(status == 60)
+    if(!autoMode)
     {
-    cout<<"gyro and accel fully calibrated, good to go for IMU fusion mode "<<endl;
-    return status;
+        cout<<"calibration bits 0-3 values : sys sys gyr gyr acc acc mag mag"<<endl
+            <<((status & 128) == 128)<<((status & 64) == 64)<<((status & 32) == 32)<<((status & 16) == 16)
+            <<((status & 0x08) == 8)<<((status & 0x04) == 4)<<((status & 0x02) == 2)<<((status & 0x01) == 1)<<endl;
+    }
+
+    if(status == CALIB_REQUIRED_FOR_IMU_MODE)
+    {
+        if(!autoMode)
+        {
+            cout<<"gyro and accel fully calibrated, good to go for IMU fusion mode "<<endl;
+        }
+        return status;
     }
     else
     {
-    cout<<"calibration required. current calibration status "<<status<<endl
-        <<"(00111100 aka 60 means gyro and accel are fuly calibrated"<<endl;
+        if(!autoMode)
+        {
+            cout<<"calibration required. current calibration status "<<status<<endl
+            <<"(00111100 aka 60 means gyro and accel are fuly calibrated"<<endl;
+        }
         return status;
     }
 }

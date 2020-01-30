@@ -43,9 +43,6 @@
 // ttyAMA0 works with a PI3 running lubuntu, One might also try ttySerial0 or ttyS0 for the uart
 // Of course, if using with an ftdi via USB, try ttyUSB0
 const std::string SERIAL_PORT = "/dev/ttyAMA0";
-
-//Recommend you set this to the config folder in your bn0055_fusion_imu package.
-//const std::string DEFAULT_FILE_PATH = "/home/lloyd/catkin_ws/src/bn0055_fusion_imu/config/bn0055_config_data.dat";
 const std::string DEFAULT_FILE_PATH = ros::package::getPath("bn0055_fusion_imu") + "/config/bn0055_config_data.dat";
 
 
@@ -167,10 +164,10 @@ const int TEMPERATURE       = 0x34;
 bool save_config(int pi, int serhandle);
 
 //after reset or power on, run this to set mode, unit preferences, and calibration data from file
-bool initialize_bn0055(int pi, int serHandle);
+bool initialize_bn0055(int pi, int serHandle, bool autoMode = true);
 
 //same as initialze_bn0055 except does not ask use for path confirmation - just uses default path
-bool auto_initialize_bn0055(int pi, int serHandle);
+//bool auto_initialize_bn0055(int pi, int serHandle);
 
 
 //More of a visual tool... once the unit is in IMU mode, it is always trying to calibrate if it
@@ -250,7 +247,7 @@ bool set_axis_remap(int pi, int serHandle, int axisMapConfig);
 int get_system_status(int pi, int serHandle);
 
 //checks calibrations status. Must not be in config mode
-int get_calibration_status(int pi, int serHandle);
+int get_calibration_status(int pi, int serHandle, bool autoMode = false);
 
 //reads the unit preferences (degrees vs radians, m/s^2 vs milliG, etc
 int get_units(int pi, int serHandle);

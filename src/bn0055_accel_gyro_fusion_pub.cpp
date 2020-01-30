@@ -74,7 +74,7 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    if(!verify_accel_gyro_fusion_config(pi, serHandle) && !auto_initialize_bn0055(pi, serHandle))
+    if(!verify_accel_gyro_fusion_config(pi, serHandle) && !initialize_bn0055(pi, serHandle))
     {
 
         cout<<"************************************************************"<<endl;

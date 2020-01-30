@@ -149,7 +149,7 @@ int main(int argc, char **argv)
             break;
 
             case 4:
-            if(!initialize_bn0055(pi, serHandle))
+            if(!initialize_bn0055(pi, serHandle, false))
             {
                 cout<<"LOADING PREVIOUS DATA NOT SUCCESSFUL"<<endl;
             }
