@@ -33,6 +33,7 @@
 #define BN0055_H_INCLUDED
 
 #include "ros/ros.h"
+#include "ros/package.h"
 #include "sensor_msgs/Imu.h"
 #include <string>
 
@@ -44,7 +45,8 @@
 const std::string SERIAL_PORT = "/dev/ttyAMA0";
 
 //Recommend you set this to the config folder in your bn0055_fusion_imu package.
-const std::string DEFAULT_FILE_PATH = "/home/lloyd/catkin_ws/src/bn0055_fusion_imu/config/bn0055_config_data.dat";
+//const std::string DEFAULT_FILE_PATH = "/home/lloyd/catkin_ws/src/bn0055_fusion_imu/config/bn0055_config_data.dat";
+const std::string DEFAULT_FILE_PATH = ros::package::getPath("bn0055_fusion_imu") + "/config/bn0055_config_data.dat";
 
 
 
