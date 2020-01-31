@@ -97,7 +97,7 @@ int main(int argc, char **argv)
         if(i==0 || i==4 || i==8)
         {
             imu.linear_acceleration_covariance[i]=.0001;
-            imu.orientation_covariance[i] = .000001;
+            imu.orientation_covariance[i] = .0001;
             imu.angular_velocity_covariance[i] = .0001;
         }
         else
@@ -107,20 +107,37 @@ int main(int argc, char **argv)
             imu.angular_velocity_covariance[i] = 0;
         }
     }
-
+    int good_reads = 0;
+    int total_errors = 0;
     int consecutive_errors = 0;
-    ros::Rate loop_rate(10);
+    ros::Rate loop_rate(30);
     while(ros::ok && consecutive_errors < 200)
     {
         if(get_imu_data(pi, serHandle, imu) == true)
         {
+
+            imu.linear_acceleration_covariance[0]=.0001;
+            imu.orientation_covariance[0] = .0001;
+            imu.angular_velocity_covariance[0] = .0001;
             pub.publish(imu);
             consecutive_errors = 0;
+            good_reads++;
         }
         else
         {
+            total_errors++;
             cout<<"Error count = "<<consecutive_errors++<<endl;
+            imu.linear_acceleration_covariance[0]=-1;
+            imu.orientation_covariance[0] = -1;
+            imu.angular_velocity_covariance[0] = -1;
+            pub.publish(imu);
         }
+
+        if(good_reads%100 == 0)
+        {
+            cout<<"good .. errors ... success % .... "<<good_reads <<" ... "<< total_errors <<" ... "<<(double)(good_reads / (total_errors+good_reads))*100<<endl;
+        }
+
         loop_rate.sleep();
     }
 

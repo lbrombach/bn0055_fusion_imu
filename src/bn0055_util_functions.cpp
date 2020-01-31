@@ -44,30 +44,15 @@ bool get_imu_data(int pi, int serHandle, sensor_msgs::Imu &imu)
 
     //two bytes per data[] element = request 26 bytes,
     //and try again if error
-    int calStat = get_calibration_status(pi, serHandle, true);
-    if(get_bytes(pi, serHandle, GYR_DATA_X_LSB, 26, data) == false
-        || calStat != CALIB_REQUIRED_FOR_IMU_MODE)
+    if(get_bytes(pi, serHandle, GYR_DATA_X_LSB, 26, data) == false)
     {
         cout<<"********ERROR**RETRYING********  "<<endl;
-        time_sleep(.025);
-        if(calStat != CALIB_REQUIRED_FOR_IMU_MODE)
-        {
-            initialize_bn0055(pi, serHandle);
-            calStat = get_calibration_status(pi, serHandle, true);
-        }
-        if(get_bytes(pi, serHandle, GYR_DATA_X_LSB, 2, data) == false
-        || calStat != CALIB_REQUIRED_FOR_IMU_MODE)
+        time_sleep(.02);
+        if(get_bytes(pi, serHandle, GYR_DATA_X_LSB, 26, data) == false)
         {
             cout<<"*******FAILURE THIS ROUND ***********"<<endl;
-            imu.orientation.w = -1;
-            imu.orientation.x = -1;
-            imu.orientation.y = -1;
-            imu.orientation.z = -1;
-            imu.linear_acceleration_covariance[0]=-1;
-            imu.orientation_covariance[0] = -1;
-            imu.angular_velocity_covariance[0] = -1;
+            return false;
         }
-        return false;
     }
     else
     {
@@ -84,10 +69,6 @@ bool get_imu_data(int pi, int serHandle, sensor_msgs::Imu &imu)
         imu.linear_acceleration.x = (double)data[10]/100;
         imu.linear_acceleration.y = (double)data[11]/100;
         imu.linear_acceleration.y = (double)data[12]/100;
-
-        imu.linear_acceleration_covariance[0]=.0001;
-        imu.orientation_covariance[0] = .000001;
-        imu.angular_velocity_covariance[0] = .0001;
 
         imu.header.stamp = ros::Time::now();
         return true;
@@ -409,98 +390,6 @@ bool initialize_bn0055(int pi, int serHandle, bool autoMode)
     cout<<endl<<"Initialization successful"<<endl<<endl;
     return true;
 }
-
-//
-//bool auto_initialize_bn0055(int pi, int serHandle)
-//{
-//    string path = DEFAULT_FILE_PATH;
-//
-//    ifstream inFile;
-//    inFile.open(path.c_str());
-//    int opr, units, calStat, axisMapConfig;
-//    char calData[27]={0};
-//
-//    if(inFile.is_open() )
-//    {
-//        //disregard header - ignore all text until '#' flag, then ignore that line too
-//        while(inFile.peek()!='#')
-//        {
-//            inFile.ignore();
-//        }
-//        inFile.ignore(50, '\n');
-//
-//        //read current opr mode, units, and calibration status at time of last save
-//        inFile>>opr>>units>>calStat>>axisMapConfig;
-//        cout<<endl<<"opr mode = "<<opr<<"  units = "<<units<< "  calStat = "<<calStat<<"  axis map config = "<<axisMapConfig<<endl;
-//
-//        //read calibration offsets and radii into buf to write, leaving room for header bytes
-//        for(int i=0; i<22; i++)
-//        {
-//            inFile>>calData[i+4];
-//            cout<<(int)calData[i]<<" ";
-//        }
-//
-//        inFile.close();
-//    }
-//    else
-//    {
-//        cout<<"Unable to open "<<path<<" ***INITIALIZE FAILED***"<<endl;
-//        return false;
-//    }
-//
-//    cout<<endl<<"File read complete, trying to write data"<<endl;
-//    set_config_mode(pi, serHandle);
-//
-//
-//    if (!set_axis_remap(pi, serHandle, axisMapConfig) && get_axis_map(pi, serHandle != axisMapConfig))
-//    {
-//        time_sleep(.25);
-//        if(!set_axis_remap(pi, serHandle, axisMapConfig))
-//        {
-//            cout<<"***WARNING: UNABLE TO SET OR VERIFY AXIS MAP CONFIG!***"<<endl;
-//        }
-//    }
-//
-//    //set write header bytes
-//    calData[0]=0xAA;
-//    calData[1]=0x00;
-//    calData[2]=ACC_OFFSET_X_LSB;
-//    calData[3]= 22;
-//    char buf[2] = {0};
-//
-//    //try twice to write the offset data
-//    serial_write(pi, serHandle, calData, 26);
-//    time_sleep(.5);
-//    (serial_read(pi, serHandle, buf, 2));
-//    int response = buf[1];
-//    if (!write_success(response))
-//    {
-//        serial_write(pi, serHandle, calData, 26);
-//        time_sleep(.5);
-//        (serial_read(pi, serHandle, buf, 2));
-//        int response = buf[1];
-//        if(!write_success(response))
-//        {
-//            cout<<"**UNABLE TO WRITE TO CALIBRATION REGISTERS**"<<endl;
-//            return false;
-//        }
-//    }
-//    cout<<"Writing to calibration registers successful"<<endl;
-//
-//    if(!verify_accel_gyro_fusion_config(pi, serHandle))
-//    {
-//        cout<<"************************************************************"<<endl;
-//        cout<<"*       Unable to verify or set BN0055 IMU config.         *"<<endl;
-//        cout<<"*       Verify config before trying to run node            *"<<endl;
-//        cout<<"************************************************************"<<endl;
-//        confirm();
-//    }
-//
-//    cout<<endl<<"Initialization successful"<<endl<<endl;
-//    return true;
-//}
-
-
 
 bool save_config(int pi, int serHandle)
 {

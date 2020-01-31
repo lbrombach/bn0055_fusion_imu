@@ -91,11 +91,11 @@ int get_byte(int pi, int serHandle, int regLSB)
 bool get_bytes(int pi, int serHandle, int regLSB, int numBytes, int data[])
 {
     char outBuf[4]={START, READ, (char)regLSB, (char)numBytes};
-    char inBuf[numBytes+2] = {0};
+    char inBuf[numBytes+6] = {0};
     serial_write(pi, serHandle, outBuf, 4);
-    time_sleep(.055);
+    time_sleep(.02);
     serial_read(pi, serHandle, inBuf, numBytes+2);
-    time_sleep(.055);
+    time_sleep(.02);
 
     //successful response should be [responseByte] [msgLength] [data]
     //read success response byte = 0xBB (187)
